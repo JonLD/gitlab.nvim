@@ -452,6 +452,12 @@ M.restore_cursor_position = function(winid, tree, original_node, root_node)
   if original_node == nil or tree == nil then
     return
   end
+  -- `winid` can be nil when the discussion split isn't open (e.g. a rebuild
+  -- triggered from the inline reviewer view). Skip cursor restoration in that
+  -- case — there's no window to update.
+  if winid == nil then
+    return
+  end
   local _, line_number = tree:get_node("-" .. tostring(original_node.id))
   -- If current_node has been collapsed, try to get line number of root node instead
   if line_number == nil then

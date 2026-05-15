@@ -99,6 +99,8 @@ M.refresh_diagnostics = function()
   if state.settings.discussion_signs.enabled then
     diagnostics.refresh_diagnostics()
   end
+  -- Inline discussion view has its own enabled flag and is independent of signs.
+  require("gitlab.indicators.inline_discussions").refresh()
   common.add_empty_titles()
 end
 

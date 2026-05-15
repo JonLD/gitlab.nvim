@@ -88,10 +88,14 @@ M.open = function()
     end
   end)
 
+  local discussions = require("gitlab.actions.discussions")
   if state.settings.discussion_tree.auto_open then
-    local discussions = require("gitlab.actions.discussions")
     discussions.close()
     require("gitlab").toggle_discussions() -- Fetches data and opens discussions
+  else
+    discussions.load_discussions(function()
+      discussions.refresh_diagnostics()
+    end)
   end
 
   git.check_current_branch_up_to_date_on_remote(vim.log.levels.WARN)

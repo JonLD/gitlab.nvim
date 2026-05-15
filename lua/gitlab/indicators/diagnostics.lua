@@ -12,6 +12,7 @@ M.diagnostics_namespace = diagnostics_namespace
 M.discussion_sign_name = discussion_sign_name
 M.clear_diagnostics = function()
   vim.diagnostic.reset(diagnostics_namespace)
+  require("gitlab.indicators.inline_discussions").clear_all()
 end
 
 -- Display options for the diagnostic
@@ -45,7 +46,13 @@ local function create_diagnostic(range_info, d_or_n)
     message = message,
     col = 0,
     severity = state.settings.discussion_signs.severity,
-    user_data = { discussion_id = d_or_n.id, header = header },
+    user_data = {
+      discussion_id = d_or_n.id,
+      header = header,
+      -- resolvable / resolved live on the first note, not on the discussion
+      -- object itself. Matches how actions/discussions/tree.lua reads them.
+      resolved = first_note.resolvable and first_note.resolved or false,
+    },
     source = "gitlab",
     code = "gitlab.nvim",
   }
@@ -114,6 +121,10 @@ end
 ---Filter and place the diagnostics for the given buffer.
 ---@param bufnr number The number of the buffer for placing diagnostics.
 M.place_diagnostics = function(bufnr)
+  -- Inline discussion view runs independently of signs/diagnostics — it has its
+  -- own enabled flag and runs even when the sign-based indicators are disabled.
+  require("gitlab.indicators.inline_discussions").place_for_buf(bufnr)
+
   if not state.settings.discussion_signs.enabled then
     return
   end

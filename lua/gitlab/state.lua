@@ -266,8 +266,42 @@ M.settings = {
     icons = {
       comment = "→|",
       range = " |",
+      resolved = "✓",
+      resolved_range = " |",
     },
     skip_old_revision_discussion = false,
+  },
+  discussion_inline = {
+    enabled = true,
+    default_collapsed = false,
+    show_resolved = true,
+    max_body_width = 100,
+    -- Each note in a thread alternates between `body` and `body_alt` so replies
+    -- are easy to tell apart. The whole row (text + padding to window width) is
+    -- coloured with the chosen highlight so the thread stands out from the diff.
+    highlights = {
+      body = "GitlabDiscussionBody",
+      body_alt = "GitlabDiscussionBodyAlt",
+      separator = "GitlabDiscussionSeparator",
+      footer = "GitlabDiscussionFooter",
+      border = "GitlabDiscussionBorder",
+      collapsed = "GitlabDiscussionCollapsed",
+      resolved = "GitlabDiscussionResolved",
+      system = "GitlabDiscussionSystem",
+      -- Foreground-only groups layered on top of the body bg, so they keep
+      -- the alternating body / body_alt background colour intact.
+      header = "GitlabDiscussionHeader",
+      mention = "GitlabDiscussionMention",
+      code = "GitlabDiscussionCode",
+      link = "GitlabDiscussionLink",
+      issue_ref = "GitlabDiscussionIssueRef",
+      quote = "GitlabDiscussionQuote",
+    },
+    keymaps = {
+      reply = "r",
+      resolve = "R",
+      toggle = "<Tab>",
+    },
   },
   pipeline = {
     created = "",

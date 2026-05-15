@@ -78,6 +78,22 @@ return {
   create_multiline_comment = async.sequence({ info, revisions }, comment.create_multiline_comment),
   create_comment_suggestion = async.sequence({ info, revisions }, comment.create_comment_suggestion),
   move_to_discussion_tree_from_diagnostic = async.sequence({}, discussions.move_to_discussion_tree),
+  next_discussion = function()
+    local ns = require("gitlab.indicators.diagnostics").diagnostics_namespace
+    if vim.diagnostic.jump then
+      vim.diagnostic.jump({ count = 1, namespace = ns, wrap = true })
+    else
+      vim.diagnostic.goto_next({ namespace = ns, wrap = true })
+    end
+  end,
+  prev_discussion = function()
+    local ns = require("gitlab.indicators.diagnostics").diagnostics_namespace
+    if vim.diagnostic.jump then
+      vim.diagnostic.jump({ count = -1, namespace = ns, wrap = true })
+    else
+      vim.diagnostic.goto_prev({ namespace = ns, wrap = true })
+    end
+  end,
   create_note = async.sequence({ info }, comment.create_note),
   create_mr = async.sequence({}, create_mr.start),
   review = async.sequence({ u.merge(info, { refresh = true }), revisions, user }, function()
