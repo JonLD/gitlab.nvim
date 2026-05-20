@@ -96,9 +96,22 @@ return {
   end,
   create_note = async.sequence({ info }, comment.create_note),
   create_mr = async.sequence({}, create_mr.start),
-  review = async.sequence({ u.merge(info, { refresh = true }), revisions, user }, function()
-    reviewer.open()
-  end),
+  review = function()
+    if reviewer.is_open and reviewer.tabnr then
+      vim.api.nvim_set_current_tabpage(reviewer.tabnr)
+      return
+    end
+    if state.INFO ~= nil then
+      async.sequence({ revisions, user }, function()
+        reviewer.open()
+        state.load_new_state("info")
+      end)()
+      return
+    end
+    async.sequence({ u.merge(info, { refresh = true }), revisions, user }, function()
+      reviewer.open()
+    end)()
+  end,
   close_review = function()
     reviewer.close()
   end,
@@ -120,6 +133,9 @@ return {
   toggle_draft_mode = discussions.toggle_draft_mode,
   toggle_sort_method = discussions.toggle_sort_method,
   publish_all_drafts = draft_notes.publish_all_drafts,
+  toggle_workspace_inline_discussions = function()
+    require("gitlab.indicators.workspace_inline_discussions").toggle_buf(vim.api.nvim_get_current_buf())
+  end,
   refresh_data = function()
     -- This also rebuilds the regular views
     draft_notes.rebuild_view(false, true)

@@ -92,6 +92,33 @@ M.initialize_discussions = function()
     signs.clear_signs()
     diagnostics.clear_diagnostics()
   end)
+  M.setup_workspace_inline_autocmds()
+end
+
+---Register autocmds that drive inline-discussion placement in regular file
+---buffers (not the Diffview reviewer). Eligibility is re-checked on every
+---event, so buffers outside the MR / on the wrong branch are no-ops.
+M.setup_workspace_inline_autocmds = function()
+  local workspace_inline = require("gitlab.indicators.workspace_inline_discussions")
+  local group = vim.api.nvim_create_augroup("gitlab.workspace_inline_discussions", { clear = true })
+  vim.api.nvim_create_autocmd({ "BufReadPost", "BufEnter" }, {
+    group = group,
+    callback = function(args)
+      workspace_inline.refresh_buf(args.buf)
+    end,
+  })
+  vim.api.nvim_create_autocmd("BufWritePost", {
+    group = group,
+    callback = function(args)
+      workspace_inline.invalidate_and_refresh(args.buf)
+    end,
+  })
+  vim.api.nvim_create_autocmd("BufWipeout", {
+    group = group,
+    callback = function(args)
+      workspace_inline.clear_buf(args.buf)
+    end,
+  })
 end
 
 --- Take existing data and refresh the diagnostics and the signs
@@ -101,6 +128,7 @@ M.refresh_diagnostics = function()
   end
   -- Inline discussion view has its own enabled flag and is independent of signs.
   require("gitlab.indicators.inline_discussions").refresh()
+  require("gitlab.indicators.workspace_inline_discussions").refresh_all()
   common.add_empty_titles()
 end
 

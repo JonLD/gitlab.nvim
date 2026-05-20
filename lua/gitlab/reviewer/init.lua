@@ -15,6 +15,7 @@ local M = {
   is_open = false,
   bufnr = nil,
   tabnr = nil,
+  code_tabnr = nil,
   stored_win = nil,
   buf_winids = {},
 }
@@ -60,6 +61,7 @@ M.open = function()
     end
   end
 
+  M.code_tabnr = vim.api.nvim_get_current_tabpage()
   vim.api.nvim_command(string.format("%s %s..%s", diffview_open_command, diff_refs.base_sha, diff_refs.head_sha))
 
   M.is_open = true
@@ -158,6 +160,31 @@ M.jump = function(file_name, old_file_name, line_number, new_buffer)
   end
   vim.api.nvim_win_set_cursor(0, { line_number, 0 })
   u.open_fold_under_cursor()
+  vim.cmd("normal! zz")
+end
+
+---Switch to the code tab (or create one) and open the current diff file at the
+---cursor line. Keeps a single code tab so the user can toggle between their
+---working tree and the MR diff without accumulating tabs.
+M.jump_to_file = function()
+  local view = diffview_lib.get_current_view()
+  if view == nil then
+    u.notify("No Diffview open", vim.log.levels.ERROR)
+    return
+  end
+  local file_path = view.cur_layout.b.file.path
+  local line = vim.api.nvim_win_get_cursor(0)[1]
+
+  if M.code_tabnr and vim.api.nvim_tabpage_is_valid(M.code_tabnr) then
+    vim.api.nvim_set_current_tabpage(M.code_tabnr)
+  else
+    vim.cmd("tabnew")
+    M.code_tabnr = vim.api.nvim_get_current_tabpage()
+  end
+
+  vim.cmd("edit " .. vim.fn.fnameescape(file_path))
+  local total = vim.api.nvim_buf_line_count(0)
+  vim.api.nvim_win_set_cursor(0, { math.min(line, total), 0 })
   vim.cmd("normal! zz")
 end
 
@@ -441,6 +468,13 @@ M.set_keymaps = function(bufnr)
       require("gitlab").move_to_discussion_tree_from_diagnostic()
     end, { buffer = bufnr, desc = "Move to discussion", nowait = keymaps.reviewer.move_to_discussion_tree_nowait })
   end
+
+  -- Set mapping for jumping to the working-tree file
+  if keymaps.reviewer.jump_to_file ~= false then
+    vim.keymap.set("n", keymaps.reviewer.jump_to_file, function()
+      M.jump_to_file()
+    end, { buffer = bufnr, desc = "Open file in new tab", nowait = keymaps.reviewer.jump_to_file_nowait })
+  end
 end
 
 ---Delete keymaps from reviewer buffers.
@@ -463,6 +497,9 @@ local del_keymaps = function(bufnr)
   end
   if keymaps.reviewer.move_to_discussion_tree ~= false then
     pcall(vim.api.nvim_buf_del_keymap, bufnr, "n", keymaps.reviewer.move_to_discussion_tree)
+  end
+  if keymaps.reviewer.jump_to_file ~= false then
+    pcall(vim.api.nvim_buf_del_keymap, bufnr, "n", keymaps.reviewer.jump_to_file)
   end
 end
 

@@ -136,6 +136,7 @@ M.settings = {
       create_comment = "c",
       create_suggestion = "s",
       move_to_discussion_tree = "a",
+      jump_to_file = "o",
     },
   },
   popup = {
@@ -301,6 +302,18 @@ M.settings = {
       reply = "r",
       resolve = "R",
       toggle = "<Tab>",
+    },
+    -- Inline threads can also render in regular (non-Diffview) file buffers
+    -- so review feedback is visible while editing. Defaults use a leader
+    -- prefix to avoid colliding with `r` (replace char) and `R` (replace
+    -- mode) in normal editing buffers.
+    workspace = {
+      enabled = true,
+      keymaps = {
+        reply = "<leader>mr",
+        resolve = "<leader>mR",
+        toggle = "<leader>mt",
+      },
     },
   },
   pipeline = {
